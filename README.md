@@ -1,11 +1,11 @@
 <b>Verge Genomics Assessment</b>
 
-<u>Goals:</u>
+Goals:
 1. Assess the effect of treatments on cells' survivability
 2. Describe the assumptions, methods, and significance of results
 3. Comment on plate setup
 
-<u>Contents:</u> 
+Contents:
 1. Script.R 
 
 This is the raw script used. Apologies for not having enough time to write a function.
