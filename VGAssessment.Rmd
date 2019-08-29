@@ -1,0 +1,53 @@
+---
+title: "Verge Genomics Assessment"
+author: "Hasan Sulaeman"
+date: "8/28/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+In this assessment, I was tasked to answer the queston of: which drugs, if any, significantly improved cell survival relative to DMSO control. I was also tasked with summarizing the results of my analysis and sharing any thoughts I might have on the plate setup and statistical power of the results.
+
+I will be answering the first question on survival, which includes 4 steps: 
+
+1. Data and library Setup
+``` {r setup}
+# Library and Data Setup
+library(survival) 
+library(ranger) 
+library(ggplot2)
+library(ggfortify)
+
+# Reading CSV
+plate_data = read.csv("ValidationStudy88_PlateID246 (1).csv")
+
+# Doublechecking for NAs
+table(is.na(plate_data))
+```
+
+2. Kaplan-Meier Analysis. We are first creating a fit:
+``` {r analysis}
+km_plate_data = with(plate_data, Surv(cell_last_tp, cell_event))
+km_plate_data_fit = survfit(Surv(cell_last_tp, cell_event) ~ well_drug_name, data = plate_data)
+```
+NOTE: We're ignoring dosage as a factor since each drug treatment has only one dose level for each treatment. We are also assuming that all wells of the plate, as well as the plates, were incubated under equal conditions.
+
+3. Plotting the Kaplan-Meier curves, also known as survivorship curves. 
+``` {r plotting, echo = TRUE}
+## Plotting for each treatment ----
+plate_data_plot = autoplot(km_plate_data_fit, conf.int = TRUE, xlim = c(0, 10), xlab = "Time (Days)", ylab = "Percent Survival", 
+                        main = "Survivorship Curve")
+plate_data_plot + theme_classic()
+```
+
+4. Cox proportional hazards model with constant covariates. Cox proportional hazards model is a regression approach to assess the effect of treatments on survivability, and is how I am assessing the significance of the results.
+``` {r modeling}
+coxph.fit = coxph(Surv(cell_last_tp, cell_event) ~ well_drug_name,
+                  method="breslow", data = plate_data)
+print(coxph.fit)
+```
+
+As shown from the survivorship curve above, as well as the cox proportional hazards model, the treatment with VRG0106 (z=-9.75; p<0.01) performed significantly better at helping cells survive than other treatments. 
+
+As I am not too familiar with the assay, I couldn't say much on the plate setup. At first it seemed a bit odd that the same treatment groups would be separated but it could be due a method of controlling for random variables such as camera angles for the microscopy image, storage conditions, etc. 
